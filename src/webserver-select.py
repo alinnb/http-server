@@ -2,47 +2,8 @@ import select
 import socket
 import queue
 
-
-class BaseHttpData:
-    ver = ""
-    host = ""
-    header = {}
-    context = ""
-
-class Request(BaseHttpData):
-    method = ""
-    uri = ""
-
-    def isValid(self):
-        return self.method == "GET" or self.method == "POST"
-
-    def print(self):
-        print("method:", self.method)
-        print("uri:", self.uri)
-        print("ver:", self.ver)
-        for key, value in self.header.items():
-            print("header:", key, value)
-        print("context:", self.context)
-
-class Response(BaseHttpData):
-    statusCode = None
-    statusText = ""
-
-    def print(self):
-        print("ver:", self.ver)
-        print("statusCode:", self.statusCode)
-        print("statusText:", self.statusText)
-        for key, value in self.header.items():
-            print("header:", key, value)
-        print("context:", self.context)
-
-    def toString(self):
-        res = self.ver + ' ' + self.statusCode + ' ' + self.statusText + '\r\n'
-        for key, value in self.header.items():
-            res += key + ": " + value + '\r\n'
-        res += '\r\n'
-        res += self.context + '\r\n'
-        return res.encode('utf-8')
+from Request import Request 
+from Response import Response 
 
 class HttpConnection:
     request = None
@@ -190,7 +151,8 @@ def main():
     server = WebServer()
     server.start()
 
-main()
+if __name__=='__main__':
+    main()
     
 
 
