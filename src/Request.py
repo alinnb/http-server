@@ -1,4 +1,5 @@
-from BaseHttpData import * 
+from BaseHttpData import *
+
 
 class Request(BaseHttpData):
     method = ""
@@ -13,4 +14,4 @@ class Request(BaseHttpData):
         print("ver:", self.ver)
         for key, value in self.header.items():
             print("header:", key, value)
-        print("context:", self.context)    
+        print("context:", self.context)

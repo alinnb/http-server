@@ -3,4 +3,3 @@ class BaseHttpData:
     host = ""
     header = {}
     context = ""
-

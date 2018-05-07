@@ -2,8 +2,9 @@ import select
 import socket
 import queue
 
-from Request import Request 
-from Response import Response 
+from Request import Request
+from Response import Response
+
 
 class HttpConnection:
     request = None
@@ -13,7 +14,8 @@ class HttpConnection:
         self.request = Request()
         self.response = Response()
 
-class WebServer:    
+
+class WebServer:
     server = None
     inputs = []
     outputs = []
@@ -35,7 +37,7 @@ class WebServer:
             strArray = stream.split("\r\n\r\n")
             #header
             headerArray = strArray[0].split("\r\n")
-            for index,value in enumerate(headerArray):
+            for index, value in enumerate(headerArray):
                 if index == 0:
                     #method,uri,ver
                     requestLineArray = value.split(" ")
@@ -47,7 +49,7 @@ class WebServer:
                     headerKey = headerLineArray[0]
                     headerValue = headerLineArray[1]
                     req.header[headerKey] = headerValue
-            
+
             #content
             if len(strArray) > 1:
                 req.context = strArray[1]
@@ -56,14 +58,14 @@ class WebServer:
             print("httpparser error", e)
 
         else:
-            req.print() 
+            req.print()
 
     def closeConnect(self, connect):
         if connect in self.outputs:
             self.outputs.remove(connect)
         self.inputs.remove(connect)
         connect.close()
-        
+
     def start(self):
         self.server.listen(10)
         print("Serving ", self.server_address)
@@ -73,7 +75,7 @@ class WebServer:
         while True:
             # print("Waiting for connection...")
 
-            #select.select（rlist, wlist, xlist[, timeout]） 
+            #select.select（rlist, wlist, xlist[, timeout]）
             # 传递三个参数，
             #   一个为输入而观察的文件对象列表，
             #   一个为输出而观察的文件对象列表，
@@ -81,9 +83,10 @@ class WebServer:
             #   第四个是一个可选参数，表示超时秒数。
             # 其返回3个tuple，
             #   每个tuple都是一个准备好的对象列表，它和前边的参数是一样的顺序。
-            readable, writable, exceptional = select.select(self.inputs, self.outputs, self.inputs, timeout)
+            readable, writable, exceptional = select.select(
+                self.inputs, self.outputs, self.inputs, timeout)
 
-            if not (readable or writable or exceptional) :
+            if not (readable or writable or exceptional):
                 print("select 超时无活动连接， 重新select...")
                 continue
 
@@ -108,13 +111,15 @@ class WebServer:
                         self.closeConnect(s)
                     else:
                         if data:
-                            print("receive data:", data, "client:", s.getpeername())
+                            print("receive data:", data,
+                                  "client:", s.getpeername())
                             # message_queue[s].put(data)
                             if s not in self.outputs:
                                 self.outputs.append(s)
 
                             #parser the receive data
-                            self.httpParser(data, self.httpConnection[s].request)
+                            self.httpParser(
+                                data, self.httpConnection[s].request)
 
                         else:
                             print("close connect:", s.getpeername())
@@ -125,20 +130,20 @@ class WebServer:
                 try:
                     # print("queue size",  message_queue[s].qsize())
                     # msg = message_queue[s].get_nowait()
-                # except queue.Empty:
-                #     err_msg = "connection" + str(s.getpeername()) + "output queue is empty."
+                    # except queue.Empty:
+                    #     err_msg = "connection" + str(s.getpeername()) + "output queue is empty."
                     self.httpConnection[s].response.ver = self.httpConnection[s].request.ver
                     self.httpConnection[s].response.statusCode = "200"
                     self.httpConnection[s].response.statusText = 'OK'
                     self.httpConnection[s].response.context = 'Hello World'
-                    
+
                 except Exception as e:
                     print("connection send data error", e)
-                        # del message_queue[s]
+                    # del message_queue[s]
                 else:
                     print("generate response.", s.getpeername())
                     s.send(self.httpConnection[s].response.toString())
-                
+
                 if s in self.outputs:
                     self.outputs.remove(s)
 
@@ -147,13 +152,11 @@ class WebServer:
                 self.closeConnect(s)
                 # del message_queue[s]
 
+
 def main():
     server = WebServer()
     server.start()
 
-if __name__=='__main__':
+
+if __name__ == '__main__':
     main()
-    
-
-
-

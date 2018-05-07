@@ -1,4 +1,5 @@
-from BaseHttpData import * 
+from BaseHttpData import *
+
 
 class Response(BaseHttpData):
     statusCode = None
