@@ -7,23 +7,22 @@ from http_protocol.Response import Response
 from http_protocol.HttpConnection import HttpConnection
 from http_protocol.HttpParser import httpParser
 
-if __name__ == '__main__':
-    from app.Application import application
-
 class WebServer:
     server = None
+    application = None
     inputs = []
     outputs = []
     httpConnections = {}
 
-    def __init__(self):
+    def __init__(self, host, port, application):
         print("WebServer init")
         self.server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.server.setblocking(False)
         self.server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        self.server_address = ('127.0.0.1', 8080)
+        self.server_address = (host, port)
         self.server.bind(self.server_address)
         self.inputs = [self.server]
+        self.application = application
 
     def closeConnect(self, connect):
         if connect in self.outputs:
@@ -31,9 +30,9 @@ class WebServer:
         self.inputs.remove(connect)
         connect.close()
 
-    def start(self, application):
+    def serve_forever(self):
         self.server.listen(10)
-        print("Serving ", self.server_address)
+        print("Serving HTTP on", self.server_address)
 
         timeout = 20
 
@@ -52,7 +51,7 @@ class WebServer:
                 self.inputs, self.outputs, self.inputs, timeout)
 
             if not (readable or writable or exceptional):
-                print("select 超时无活动连接， 重新select...")
+                # print("select 超时无活动连接， 重新select...")
                 continue
 
             for s in readable:
@@ -90,7 +89,7 @@ class WebServer:
             for s in writable:
                 if self.httpConnections[s].isFinish() is not True:
                     try:
-                        self.httpConnections[s].setContext(application(
+                        self.httpConnections[s].setContext(self.application(
                             self.httpConnections[s], self.httpConnections[s].start_response))
                     except Exception as e:
                         print("connection send data error", e)
@@ -106,11 +105,7 @@ class WebServer:
                 print(s.getpeername(), "Excptional connection")
                 self.closeConnect(s)
 
-
-def main():
-    server = WebServer()
-    server.start(application)
-
-
 if __name__ == '__main__':
-    main()
+    from app.Application import application
+    server = WebServer('127.0.0.1', 8080, application)
+    server.serve_forever()

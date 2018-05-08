@@ -1,5 +1,6 @@
 from http_server.WebServer import WebServer
 from app.Application import application
+import config
 
-server = WebServer()
-server.start(application)
+httpd = WebServer(config.HOST, config.PORT, application)
+httpd.serve_forever()
