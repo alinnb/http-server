@@ -6,7 +6,6 @@ import errno
 from http_protocol.Request import Request
 from http_protocol.Response import Response
 from http_protocol.HttpConnection import HttpConnection
-from http_protocol.HttpParser import httpParser
 
 class WebServer:
     server = None
@@ -95,10 +94,8 @@ class WebServer:
                             print(s.getpeername(), "receive data:", buffer)
                             if s not in self.outputs:
                                 self.outputs.append(s)
-
-                            #parser the receive data
-                            httpParser(buffer, self.httpConnections[s].request)
-
+                            #parser the receive 
+                            self.httpConnections[s].request.httpParser(buffer)
                         else:
                             self.closeConnect(s)
 
