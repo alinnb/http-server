@@ -1,8 +1,11 @@
 from http_protocol.BaseHttpData import *
 
 class Request(BaseHttpData):
-    method = ""
-    uri = ""
+
+    def __init__(self):
+        super(Request, self).__init__()
+        self.method = ""
+        self.uri = ""
 
     def isValid(self):
         return self.method == "GET" or self.method == "POST"

@@ -3,10 +3,7 @@ from http_protocol.Request import Request
 from http_protocol.Response import Response
 
 class HttpConnection:
-    request = None
-    response = None
-    state = ""
-
+    
     def __init__(self):
         self.request = Request()
         self.response = Response()
@@ -16,7 +13,7 @@ class HttpConnection:
         if self.state == "init":
             self.response.ver = self.request.ver
             self.response.statusCode = code.split(' ')[0]
-            self.response.statusText = code.split(' ')[1]
+            self.response.reasonPhrase = code.split(' ')[1]
             for t in header:
                 self.response.header[t[0]] = t[1] #切片
             self.state = "header finish"

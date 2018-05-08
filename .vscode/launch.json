@@ -2,6 +2,12 @@
     "version": "0.2.0",
     "configurations": [    
         {
+            "name": "Python: RunServer",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/run.py"
+        },   
+        {
             "name": "Python: Current File",
             "type": "python",
             "request": "launch",

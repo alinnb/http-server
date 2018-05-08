@@ -1,8 +1,11 @@
 from http_protocol.BaseHttpData import *
 
 class Response(BaseHttpData):
-    statusCode = None
-    reasonPhrase = ""
+
+    def __init__(self):
+        super(Response, self).__init__()
+        self.statusCode = None
+        self.reasonPhrase = ""
 
     # def print(self):
     #     print("ver:", self.ver)
@@ -13,7 +16,7 @@ class Response(BaseHttpData):
     #     print("context:", self.context)
 
     def toString(self):
-        res = self.ver + ' ' + self.statusCode + ' ' + self.reasonPhrase + '\r\n'
+        res = 'HTTP/1.1' + ' ' + self.statusCode + ' ' + self.reasonPhrase + '\r\n'
         for key, value in self.header.items():
             res += key + ": " + value + '\r\n'
         res += '\r\n'
