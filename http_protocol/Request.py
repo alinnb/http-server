@@ -1,5 +1,4 @@
-from BaseHttpData import *
-
+from http_protocol.BaseHttpData import *
 
 class Request(BaseHttpData):
     method = ""

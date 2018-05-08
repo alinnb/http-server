@@ -1,1 +1,3 @@
-src/__pycache__/
+http_protocol/__pycache__/
+http_server/__pycache__/
+app/__pycache__/

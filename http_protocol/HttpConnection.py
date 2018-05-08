@@ -1,6 +1,6 @@
 
-from Request import Request
-from Response import Response
+from http_protocol.Request import Request
+from http_protocol.Response import Response
 
 class HttpConnection:
     request = None

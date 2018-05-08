@@ -2,12 +2,13 @@ import select
 import socket
 import queue
 
-from Request import Request
-from Response import Response
-from Application import application
-from HttpConnection import HttpConnection
-from HttpParser import httpParser
+from http_protocol.Request import Request
+from http_protocol.Response import Response
+from http_protocol.HttpConnection import HttpConnection
+from http_protocol.HttpParser import httpParser
 
+if __name__ == '__main__':
+    from app.Application import application
 
 class WebServer:
     server = None
