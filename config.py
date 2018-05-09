@@ -8,4 +8,8 @@ SOCKET_BACKLOG_SIZE = 5
 
 ROOT = os.path.join(os.getcwd() + "/static/")
 
+KEEPALIVE = True
+
+KEEPALIVE_TIMEOUT = 10 * 1000 #ms
+
 pass

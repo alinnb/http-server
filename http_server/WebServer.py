@@ -2,6 +2,7 @@ import select
 import socket
 import queue
 import errno
+import time
 
 from http_protocol.Request import Request
 from http_protocol.Response import Response
@@ -25,7 +26,7 @@ class WebServer:
         self.application = application
 
     def closeConnect(self, connect):
-        print(connect.getpeername(), "connection closed")
+        print(id(connect), connect.getpeername(), "connection closed")
         if connect in self.outputs:
             self.outputs.remove(connect)
         self.inputs.remove(connect)
@@ -58,11 +59,11 @@ class WebServer:
             for s in readable:
                 if s is self.server:
                     connect, client_address = s.accept()
-                    print(client_address, "new connection:")
+                    print(id(connect), client_address, "new connection:")
                     connect.setblocking(False)
 
                     self.inputs.append(connect)
-                    self.httpConnections[connect] = HttpConnection()
+                    self.httpConnections[connect] = HttpConnection(self.application)
 
                 else:
                     buffer = b''
@@ -71,7 +72,7 @@ class WebServer:
                         # 其中err == errno.EAGAIN or err == errno.EWOULDBLOCK不是真正的异常，只是数据读完了
                         while True:
                             try:
-                                data = s.recv(20)
+                                data = s.recv(1024)
                             except socket.error as e:
                                 err = e.args[0]
                                 if err == errno.EAGAIN or err == errno.EWOULDBLOCK:
@@ -89,34 +90,22 @@ class WebServer:
                         print("close connect:", e)
                         self.closeConnect(s)
                     else:
-                        # sss = ''.join(buffer)
                         if buffer:
-                            print(s.getpeername(), "receive data:", buffer)
+                            self.httpConnections[s].processer(s, buffer)
                             if s not in self.outputs:
                                 self.outputs.append(s)
-                            #parser the receive 
-                            self.httpConnections[s].request.httpParser(buffer)
                         else:
                             self.closeConnect(s)
 
             for s in writable:
-                if self.httpConnections[s].isFinish() is not True:
-                    try:
-                        self.httpConnections[s].setContext(self.application(
-                            self.httpConnections[s], self.httpConnections[s].start_response))
-                    except Exception as e:
-                        print("connection send data error", e)
-                    else:
-                        print(s.getpeername(), "send response: ",
-                              self.httpConnections[s].response.toString())
-                        s.send(self.httpConnections[s].response.getHeader())
-                        s.send(self.httpConnections[s].response.getContext())
-                        self.httpConnections[s].sendFinish()
-                else:  # response sent
-                    self.closeConnect(s)
+                try:
+                    self.httpConnections[s].sendResponse(s)
+                except Exception as e:
+                    print("connection send data error", e)
+                self.closeConnect(s)
 
             for s in exceptional:
-                print(s.getpeername(), "Excptional connection")
+                print(id(s), s.getpeername(), "Excptional connection")
                 self.closeConnect(s)
 
 if __name__ == '__main__':

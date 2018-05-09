@@ -2,14 +2,19 @@
 from file_system.file_helper import get_file
 from http_protocol.status_codes import HTTP_STATUS_CODES
 
-def application(environ, start_response):
-    f = get_file(environ.request.absoluteURI)
+def application(request, response):
+    f = get_file(request.absoluteURI)
+    code = None
 
     if f.exists:
-        start_response('200 OK', [('Content-Type', f.mime_type), ('Content-Length', f.file_size)])
-        return [f.read()]
+        code = 200
     else:
-        start_response('404 ' + HTTP_STATUS_CODES[404][0] , [])
-        return HTTP_STATUS_CODES[404][1]
-
-    return b''
+        code = 404
+    
+    response.setResponseCode(request.ver, code, HTTP_STATUS_CODES[code][0])
+    
+    if f.exists:
+        response.setHeader([('Content-Type', f.mime_type), ('Content-Length', f.file_size)])
+        return [f.read()]
+    
+    return HTTP_STATUS_CODES[code][1]
