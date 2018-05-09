@@ -6,7 +6,7 @@ def application(environ, start_response):
     f = get_file(environ.request.absoluteURI)
 
     if f.exists:
-        start_response('200 OK', [('Content-Type', 'text/html')])
+        start_response('200 OK', [('Content-Type', f.mime_type), ('Content-Length', f.file_size)])
         return [f.read()]
     else:
         start_response('404 ' + HTTP_STATUS_CODES[404][0] , [])

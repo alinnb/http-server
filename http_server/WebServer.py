@@ -109,7 +109,8 @@ class WebServer:
                     else:
                         print(s.getpeername(), "send response: ",
                               self.httpConnections[s].response.toString())
-                        s.send(self.httpConnections[s].response.toString())
+                        s.send(self.httpConnections[s].response.getHeader())
+                        s.send(self.httpConnections[s].response.getContext())
                         self.httpConnections[s].sendFinish()
                 else:  # response sent
                     self.closeConnect(s)

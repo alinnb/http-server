@@ -13,18 +13,22 @@ class Response(BaseHttpData):
     def toString(self):
         res = 'HTTP/1.1' + ' ' + self.statusCode + ' ' + self.reasonPhrase + '\r\n'
         for key, value in self.header.items():
-            res += key + ": " + value + '\r\n'
+            res += key + ": " + str(value) + '\r\n'
         res += '\r\n'
-        res += self.context.decode('utf-8') + '\r\n'
+        try:
+            res += self.context.decode('utf-8') + '\r\n'
+        except:
+            pass
             
         return res.encode('utf-8')
 
-    # def getHeader(self):
-    #     res = 'HTTP/1.1' + ' ' + self.statusCode + ' ' + self.reasonPhrase + '\r\n'
-    #     for key, value in self.header.items():
-    #         res += key + ": " + value + '\r\n'
-    #     res += '\r\n'
+    def getHeader(self):
+        res = 'HTTP/1.1' + ' ' + self.statusCode + ' ' + self.reasonPhrase + '\r\n'
+        for key, value in self.header.items():
+            res += key + ": " + str(value) + '\r\n'
+        res += '\r\n'
+        return bytes(res, encoding='utf-8')
     
-    # def getContext(self):
-    #     return self.context
+    def getContext(self):
+        return self.context
 
