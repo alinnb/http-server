@@ -21,7 +21,13 @@ class HttpConnection:
     def setContext(self, context):
         if self.state == "header finish":
             for c in context:
-                self.response.context += c.decode('utf-8')
+                if isinstance(c, str):
+                    self.response.context += bytes(c, encoding='utf-8')
+                elif isinstance(c, bytes):
+                    self.response.context += c
+                else:
+                    pass
+                    
             self.state = "context finish"
 
     def sendFinish(self):

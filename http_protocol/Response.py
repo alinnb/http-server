@@ -7,18 +7,24 @@ class Response(BaseHttpData):
         self.statusCode = None
         self.reasonPhrase = ""
 
-    # def print(self):
-    #     print("ver:", self.ver)
-    #     print("statusCode:", self.statusCode)
-    #     print("reasonPhrase:", self.reasonPhrase)
-    #     for key, value in self.header.items():
-    #         print("header:", key, value)
-    #     print("context:", self.context)
+    def __str__(self):
+        return self.toString()
 
     def toString(self):
         res = 'HTTP/1.1' + ' ' + self.statusCode + ' ' + self.reasonPhrase + '\r\n'
         for key, value in self.header.items():
             res += key + ": " + value + '\r\n'
         res += '\r\n'
-        res += self.context + '\r\n'
+        res += self.context.decode('utf-8') + '\r\n'
+            
         return res.encode('utf-8')
+
+    # def getHeader(self):
+    #     res = 'HTTP/1.1' + ' ' + self.statusCode + ' ' + self.reasonPhrase + '\r\n'
+    #     for key, value in self.header.items():
+    #         res += key + ": " + value + '\r\n'
+    #     res += '\r\n'
+    
+    # def getContext(self):
+    #     return self.context
+

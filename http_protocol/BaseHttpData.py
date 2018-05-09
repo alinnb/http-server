@@ -4,5 +4,5 @@ class BaseHttpData:
         self.ver = ""
         self.host = ""
         self.header = {}
-        self.context = ""
+        self.context = b""
 
