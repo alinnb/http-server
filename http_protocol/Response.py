@@ -1,4 +1,5 @@
 from http_protocol.BaseHttpData import *
+import gzip
 
 class Response(BaseHttpData):
 
@@ -7,6 +8,7 @@ class Response(BaseHttpData):
         self.isSend = False
         self.statusCode = None
         self.reasonPhrase = ""
+        self.request = None
         # set default value
         self.ver = 'HTTP/1.1'
 
@@ -27,6 +29,17 @@ class Response(BaseHttpData):
                 self.context += c
             else:
                 pass
+
+        for e in self.request.encodingQValue:
+            if e[0].lower() == 'gzip':
+                self.context = gzip.compress(self.context)
+                self.setHeader([('Content-Encoding', e[0])])
+            # if e[0].lower() == 'compress':
+            #     return f.read()
+            # if e[0].lower() == 'deflate':
+            #     return f.read()
+
+        self.setHeader([('Content-Length', len(self.context))])            
 
     def __str__(self):
         return self.toString()

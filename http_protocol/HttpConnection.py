@@ -23,9 +23,10 @@ class HttpConnection:
         req.httpParser(buffer)
         
         rsp = Response()
+        rsp.request = req
         rsp.setContext(self.application(req, rsp))
         
-        # check keep alive max
+        # deal keep-alive
         if self.keepAlive:
             self.keepAlive_max -= 1
             if self.keepAlive_max == 0:
@@ -33,7 +34,6 @@ class HttpConnection:
             else:
                 rsp.setHeader([('Connection', 'keep-alive'), ('Keep-Alive', 'timeout = %d, max = %d' % (self.keepAlive_timeout, self.keepAlive_max))])
 
-        rsp.request = req
         self.responseList.append(rsp)
 
     def sendResponse(self, connect, close):

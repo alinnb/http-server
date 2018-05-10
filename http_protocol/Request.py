@@ -11,6 +11,7 @@ class Request(BaseHttpData):
         self.absoluteURI = ""
         self.query = {}
         self.cookies = {}
+        self.encodingQValue = []
 
     def isValid(self):
         return self.method == "GET" or self.method == "POST"
@@ -38,6 +39,8 @@ class Request(BaseHttpData):
                     self.header[headerKey] = headerValue
                     if headerKey == 'Cookie':
                         self.setCookieString(headerValue)
+                    elif headerKey == 'Accept-Encoding':
+                        self.setEncodingQValue(headerValue)
 
             #content
             if len(strArray) > 1:
@@ -50,8 +53,8 @@ class Request(BaseHttpData):
 
     def setQueryString(self, Stream):
         try:
-            queryArray = Stream.split('&')
-            for q in queryArray:
+            array = Stream.split('&')
+            for q in array:
                 qArray = q.split('=')
                 self.query[qArray[0]] = qArray[1]
         except:
@@ -62,8 +65,8 @@ class Request(BaseHttpData):
     
     def setCookieString(self, Stream):
         try:
-            cookieArray = Stream.split(';')
-            for c in cookieArray:
+            array = Stream.split(';')
+            for c in array:
                 i = c.find('=')
                 if i >= 1:
                     self.cookies[c[:i-1].strip()] = c[i+1:].strip()
@@ -72,3 +75,22 @@ class Request(BaseHttpData):
 
         # for k,q in self.cookies.items():
         #     print("cookie:", k, q)
+    
+    def setEncodingQValue(self, Stream):
+        temp = {}
+        try:
+            array = Stream.split(',')
+            for c in array:
+                i = c.find(';')
+                if i >= 1:
+                    temp[c[:i-1].strip()] = float(c[i+1:].strip())
+                else:
+                    temp[c] = 1.0
+
+            self.encodingQValue = sorted(temp.items(), key=lambda d:d[1], reverse = True)
+
+        except:
+            pass
+
+        # for e in self.encodingQValue:
+        #     print("accept-encoding:", e[0], e[1])
