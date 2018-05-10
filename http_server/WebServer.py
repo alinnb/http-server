@@ -14,7 +14,7 @@ class WebServer:
     inputs = []
     outputs = []
     httpConnections = {}
-
+    
     def __init__(self, host, port, application):
         print("WebServer init")
         self.server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -59,7 +59,7 @@ class WebServer:
             for s in readable:
                 if s is self.server:
                     connect, client_address = s.accept()
-                    print(id(connect), client_address, "new connection:")
+                    print(id(connect), client_address, "new connection")
                     connect.setblocking(False)
 
                     self.inputs.append(connect)
@@ -95,14 +95,14 @@ class WebServer:
                             if s not in self.outputs:
                                 self.outputs.append(s)
                         else:
+                            print(id(connect), connect.getpeername(), "receive data: EOF")
                             self.closeConnect(s)
 
             for s in writable:
                 try:
-                    self.httpConnections[s].sendResponse(s)
+                    self.httpConnections[s].sendResponse(s, self.closeConnect)
                 except Exception as e:
                     print("connection send data error", e)
-                self.closeConnect(s)
 
             for s in exceptional:
                 print(id(s), s.getpeername(), "Excptional connection")

@@ -17,4 +17,5 @@ def application(request, response):
         response.setHeader([('Content-Type', f.mime_type), ('Content-Length', f.file_size)])
         return [f.read()]
     
+    response.setHeader([('Content-Type', 'text/plain'), ('Content-Length', len(bytes(HTTP_STATUS_CODES[code][1], encoding='utf-8')))])
     return HTTP_STATUS_CODES[code][1]

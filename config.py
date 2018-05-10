@@ -10,6 +10,8 @@ ROOT = os.path.join(os.getcwd() + "/static/")
 
 KEEPALIVE = True
 
-KEEPALIVE_TIMEOUT = 10 * 1000 #ms
+KEEPALIVE_TIMEOUT = 5 #s
+
+KEEPALIVE_MAX = 10 #ms
 
 pass

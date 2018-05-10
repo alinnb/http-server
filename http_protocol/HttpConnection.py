@@ -1,35 +1,50 @@
 
 from http_protocol.Request import Request
 from http_protocol.Response import Response
+
 import config
 import time
-
-from enum import Enum
-
-class ConnectionLifeCycle(Enum):
-    dealing = 1
-    waiting = 2
 
 class HttpConnection:
     
     def __init__(self, application):
-        self.request = Request()
-        self.response = Response()
+        self.responseList = []
         self.application = application
-        # self.keepAlive = config.KEEPALIVE
-        # self.keepAlive_timeout = config.KEEPALIVE_TIMEOUT
-        # self.keepAlive_countdown = time.time()
-        # self.state = ConnectionLifeCycle.dealing
+
+        self.keepAlive = config.KEEPALIVE
+        self.keepAlive_timeout = config.KEEPALIVE_TIMEOUT
+        self.keepAlive_stamp = time.time()
+        self.keepAlive_max = config.KEEPALIVE_MAX
 
     def processer(self, connect, buffer):
         print(id(connect), connect.getpeername(), "receive data:", buffer)
-        self.request.httpParser(buffer)
-        self.response.setContext(self.application(self.request, self.response))
 
-    def sendResponse(self, connect):
-        try:
-            print(id(connect), connect.getpeername(), "send response: ",  self.response.toString())
-            connect.sendall(self.response.getHeader())
-            connect.sendall(self.response.getContext())
-        except:
-            raise
+        req = Request()
+        req.httpParser(buffer)
+        
+        rsp = Response()
+        rsp.setContext(self.application(req, rsp))
+        
+        # check keep alive max
+        if self.keepAlive:
+            self.keepAlive_max -= 1
+            if self.keepAlive_max == 0:
+                rsp.setHeader([('Connection', 'close')])
+            else:
+                rsp.setHeader([('Connection', 'keep-alive'), ('Keep-Alive', 'timeout = %d, max = %d' % (self.keepAlive_timeout, self.keepAlive_max))])
+
+        rsp.request = req
+        self.responseList.append(rsp)
+
+    def sendResponse(self, connect, close):
+        while len(self.responseList) > 0:
+            rsp = self.responseList.pop(0)
+            try:
+                print(id(connect), connect.getpeername(), "send response: ",  rsp.toString())
+                connect.sendall(rsp.getHeader())
+                connect.sendall(rsp.getContext())
+            except:
+                raise
+
+        if (not self.keepAlive) or (self.keepAlive_max <= 0 or time.time() - self.keepAlive_stamp > self.keepAlive_timeout):
+            close(connect)

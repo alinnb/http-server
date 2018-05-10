@@ -4,8 +4,11 @@ class Response(BaseHttpData):
 
     def __init__(self):
         super(Response, self).__init__()
+        self.isSend = False
         self.statusCode = None
         self.reasonPhrase = ""
+        # set default value
+        self.ver = 'HTTP/1.1'
 
     def setResponseCode(self, ver, code, reason):
         self.ver = ver
