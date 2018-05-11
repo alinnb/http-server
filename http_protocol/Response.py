@@ -18,6 +18,7 @@ class Response(BaseHttpData):
         self.reasonPhrase = ""
         self.request = None
         self.isChunk = False
+        self.chunkQueue = queue.Queue()
         # set default value
         self.ver = 'HTTP/1.1'
 
@@ -63,10 +64,8 @@ class Response(BaseHttpData):
 
     def checkTransferChunked(self):
         if self.isChunk:
-            self.chunkQueue = queue.Queue()
             self.chunkFinish = False
             self.headerSent = False
-            self.chunkData = self.getChunkGenerator()
             self.setHeader([('Transfer-Encoding', 'chunked')])
             self.setHeader([('Connection', 'close')])
             self.removeHeader(['Content-Length'])
@@ -98,47 +97,34 @@ class Response(BaseHttpData):
     def getContext(self):
         return self.context
 
-    def getChunkGenerator(self):
-
-        yield b'B\r\nhello,world\r\n'
-
-        s = '看起来A、B的执行有点像多线程，但协程的特点在于是一个线程执行，那和多线程比，协程有何优势？'
-        buffer = bytes(s, encoding='utf-8')
-        yield b'%x'%len(buffer) + b'\r\n' + buffer + b'\r\n'
-
-        buffer = b'world'
-        yield b'%x'%len(buffer) + b'\r\n' + buffer + b'\r\n'
-
-        yield b'0\r\n'
-        yield b'\r\n'
-
-        return b''
+    # def getChunkGenerator(self):
+    #     yield b'B\r\nhello,world\r\n'
+    #     s = '看起来A、B的执行有点像多线程，但协程的特点在于是一个线程执行，那和多线程比，协程有何优势？'
+    #     buffer = bytes(s, encoding='utf-8')
+    #     yield b'%x'%len(buffer) + b'\r\n' + buffer + b'\r\n'
+    #     buffer = b'world'
+    #     yield b'%x'%len(buffer) + b'\r\n' + buffer + b'\r\n'
+    #     yield b'0\r\n'
+    #     yield b'\r\n'
+    #     return b''
 
     def getChunk(self):
+        buffer = b''
         try:
-            b = next(self.chunkData)
-            print("[sending chunk] ", str(b))
-            return b
+            task = self.chunkQueue.get_nowait()
+            self.chunkQueue.task_done()
+
+            if not task:
+                self.chunkFinish = True
+                return b'0\r\n\r\n'
+
+            buffer += task
+
+        except queue.Empty:
+            print("no work? ok, send it")
+
         except Exception as e:
-            print("[sending chunk] finish")
-            self.chunkFinish = True
-        return b""
+            print("Something wrong" + str(e))
 
-        # buffer = b''
-        # try:
-        #     task = self.chunkQueue.get_nowait()
-        #     self.chunkQueue.task_done()
-
-        #     if not task:
-        #         self.chunkFinish = True
-        #         return buffer
-
-        #     buffer += task
-
-        # except queue.Empty:
-        #     print("no work? ok, send it")
-
-        # except Exception as e:
-        #     print("Something wrong" + str(e))
-
-        # return struct.pack('>', len(buffer), '\r\n', buffer, '\r\n')
+        print("[Send Chunk] ", len(buffer))
+        return b'%x'%len(buffer) + b'\r\n' + buffer + b'\r\n'

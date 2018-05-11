@@ -18,7 +18,7 @@ def application(request, response):
 
         if f.absoluteURI.lower().find('mp4') > 0: #use chunk
             response.isChunk = True
-            # f.readAsync(response.chunkQueue)
+            f.readAsync(response.chunkQueue)
             return b''
 
         return [f.read()]
