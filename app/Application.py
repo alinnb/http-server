@@ -15,6 +15,12 @@ def application(request, response):
     
     if f.exists:
         response.setHeader([('Content-Type', f.mime_type)])
+
+        if f.absoluteURI.lower().find('mp4') > 0: #use chunk
+            response.isChunk = True
+            # f.readAsync(response.chunkQueue)
+            return b''
+
         return [f.read()]
     
     response.setHeader([('Content-Type', 'text/plain')])

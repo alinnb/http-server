@@ -103,6 +103,7 @@ class WebServer:
                     self.httpConnections[s].sendResponse(s, self.closeConnect)
                 except Exception as e:
                     print("connection send data error", e)
+                    self.closeConnect(s)
 
             for s in exceptional:
                 print(id(s), s.getpeername(), "Excptional connection")

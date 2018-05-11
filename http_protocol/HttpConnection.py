@@ -29,20 +29,30 @@ class HttpConnection:
         # deal keep-alive
         if self.keepAlive:
             self.keepAlive_max -= 1
-            if self.keepAlive_max == 0:
-                rsp.setHeader([('Connection', 'close')])
-            else:
-                rsp.setHeader([('Connection', 'keep-alive'), ('Keep-Alive', 'timeout = %d, max = %d' % (self.keepAlive_timeout, self.keepAlive_max))])
+            rsp.setKeepAlive(self.keepAlive_timeout, self.keepAlive_max)
+
+        # check transfer chunked
+        rsp.checkTransferChunked()
 
         self.responseList.append(rsp)
 
     def sendResponse(self, connect, close):
         while len(self.responseList) > 0:
-            rsp = self.responseList.pop(0)
+            rsp = self.responseList[0]
             try:
-                print(id(connect), connect.getpeername(), "send response: ",  rsp.toString())
-                connect.sendall(rsp.getHeader())
-                connect.sendall(rsp.getContext())
+                if not rsp.headerSent:
+                    print(id(connect), connect.getpeername(), "send response: ",  rsp.toString())
+                    connect.sendall(rsp.getHeader())
+                    rsp.headerSent = True
+
+                if not rsp.isChunk:
+                    connect.sendall(rsp.getContext())
+                else:# chunk transfering
+                    connect.sendall(rsp.getChunk())
+                    if not rsp.chunkFinish:
+                        return
+
+                self.responseList.pop(0)
             except:
                 raise
 

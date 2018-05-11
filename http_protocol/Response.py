@@ -1,5 +1,13 @@
+
 from http_protocol.BaseHttpData import *
-import gzip
+
+import config
+import queue
+import struct
+
+if config.CONTENT_ENCODING == 'gzip':
+    import gzip
+
 
 class Response(BaseHttpData):
 
@@ -9,6 +17,7 @@ class Response(BaseHttpData):
         self.statusCode = None
         self.reasonPhrase = ""
         self.request = None
+        self.isChunk = False
         # set default value
         self.ver = 'HTTP/1.1'
 
@@ -21,6 +30,11 @@ class Response(BaseHttpData):
         for t in header:
             self.header[t[0]] = t[1]
     
+    def removeHeader(self, header):
+        for t in header:
+            if t in self.header:
+                self.header.pop(t)
+
     def setContext(self, context):
         for c in context:
             if isinstance(c, str):
@@ -31,7 +45,7 @@ class Response(BaseHttpData):
                 pass
 
         for e in self.request.encodingQValue:
-            if e[0].lower() == 'gzip':
+            if e[0].lower() == 'gzip' and config.CONTENT_ENCODING == 'gzip':
                 self.context = gzip.compress(self.context)
                 self.setHeader([('Content-Encoding', e[0])])
             # if e[0].lower() == 'compress':
@@ -39,7 +53,24 @@ class Response(BaseHttpData):
             # if e[0].lower() == 'deflate':
             #     return f.read()
 
-        self.setHeader([('Content-Length', len(self.context))])            
+        self.setHeader([('Content-Length', len(self.context))])
+
+    def setKeepAlive(self, timeout, max):
+        if max == 0:
+            self.setHeader([('Connection', 'close')])
+        else:
+            self.setHeader([('Connection', 'keep-alive'), ('Keep-Alive', 'timeout = %d, max = %d' % (timeout, max))])
+
+    def checkTransferChunked(self):
+        if self.isChunk:
+            self.chunkQueue = queue.Queue()
+            self.chunkFinish = False
+            self.headerSent = False
+            self.chunkData = self.getChunkGenerator()
+            self.setHeader([('Transfer-Encoding', 'chunked')])
+            self.setHeader([('Connection', 'close')])
+            self.removeHeader(['Content-Length'])
+            self.removeHeader(['Keep-Alive'])
 
     def __str__(self):
         return self.toString()
@@ -50,19 +81,64 @@ class Response(BaseHttpData):
             res += key + ": " + str(value) + '\r\n'
         res += '\r\n'
         try:
-            res += self.context.decode('utf-8') + '\r\n'
+            if not self.isChunk:
+                res += self.context.decode('utf-8') + '\r\n'
         except:
             pass
-            
+
         return res.encode('utf-8')
 
     def getHeader(self):
         res = 'HTTP/1.1' + ' ' + self.statusCode + ' ' + self.reasonPhrase + '\r\n'
         for key, value in self.header.items():
             res += key + ": " + str(value) + '\r\n'
-        res += '\r\n'
+        res += '\r\n' #blank line
         return bytes(res, encoding='utf-8')
-    
+
     def getContext(self):
         return self.context
 
+    def getChunkGenerator(self):
+
+        yield b'B\r\nhello,world\r\n'
+
+        s = '看起来A、B的执行有点像多线程，但协程的特点在于是一个线程执行，那和多线程比，协程有何优势？'
+        buffer = bytes(s, encoding='utf-8')
+        yield b'%x'%len(buffer) + b'\r\n' + buffer + b'\r\n'
+
+        buffer = b'world'
+        yield b'%x'%len(buffer) + b'\r\n' + buffer + b'\r\n'
+
+        yield b'0\r\n'
+        yield b'\r\n'
+
+        return b''
+
+    def getChunk(self):
+        try:
+            b = next(self.chunkData)
+            print("[sending chunk] ", str(b))
+            return b
+        except Exception as e:
+            print("[sending chunk] finish")
+            self.chunkFinish = True
+        return b""
+
+        # buffer = b''
+        # try:
+        #     task = self.chunkQueue.get_nowait()
+        #     self.chunkQueue.task_done()
+
+        #     if not task:
+        #         self.chunkFinish = True
+        #         return buffer
+
+        #     buffer += task
+
+        # except queue.Empty:
+        #     print("no work? ok, send it")
+
+        # except Exception as e:
+        #     print("Something wrong" + str(e))
+
+        # return struct.pack('>', len(buffer), '\r\n', buffer, '\r\n')
