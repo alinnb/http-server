@@ -19,6 +19,8 @@ class Response(BaseHttpData):
         self.request = None
         self.isChunk = False
         self.chunkQueue = queue.Queue()
+        self.chunkFinish = False
+        self.headerSent = False
         # set default value
         self.ver = 'HTTP/1.1'
 
@@ -64,8 +66,6 @@ class Response(BaseHttpData):
 
     def checkTransferChunked(self):
         if self.isChunk:
-            self.chunkFinish = False
-            self.headerSent = False
             self.setHeader([('Transfer-Encoding', 'chunked')])
             self.setHeader([('Connection', 'close')])
             self.removeHeader(['Content-Length'])
@@ -121,7 +121,7 @@ class Response(BaseHttpData):
             buffer += task
 
         except queue.Empty:
-            print("no work? ok, send it")
+            raise
 
         except Exception as e:
             print("Something wrong" + str(e))

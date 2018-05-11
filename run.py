@@ -1,4 +1,4 @@
-from http_server.WebServer import WebServer
+from http_server.httpserver_select import WebServer
 from app.Application import application
 import config
 

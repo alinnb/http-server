@@ -14,6 +14,6 @@ KEEPALIVE_TIMEOUT = 5 #s
 
 KEEPALIVE_MAX = 100 #ms
 
-CONTENT_ENCODING = '' # support encoding: 'gzip'
+CONTENT_ENCODING = 'gzip' # support encoding: 'none' 'gzip'
 
 pass

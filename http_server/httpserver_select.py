@@ -78,13 +78,16 @@ class WebServer:
                                 if err == errno.EAGAIN or err == errno.EWOULDBLOCK:
                                     # print('Socket s No data available')
                                     break
+                                else:
+                                    raise
                             else:
                                 if len(data) == 0:
                                     break
                                 buffer += data
 
-                    except ConnectionResetError as e:
-                        print("connect error:", e)
+                    except socket.error as e:
+                        print("socket.error:", str(e))
+                        err = e.args[0]
                         self.closeConnect(s)
                     except Exception as e:
                         print("close connect:", e)

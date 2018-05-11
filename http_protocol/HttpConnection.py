@@ -4,6 +4,7 @@ from http_protocol.Response import Response
 
 import config
 import time
+import queue
 
 class HttpConnection:
     
@@ -48,7 +49,10 @@ class HttpConnection:
                 if not rsp.isChunk:
                     connect.sendall(rsp.getContext())
                 else:# chunk transfering
-                    connect.sendall(rsp.getChunk())
+                    try:
+                        connect.sendall(rsp.getChunk())
+                    except queue.Empty:
+                        return
                     if not rsp.chunkFinish:
                         return
 
